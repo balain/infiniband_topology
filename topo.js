@@ -1,3 +1,5 @@
+var 
+
 //A utility function for parsing URL parameters
 function getParameterByName(name) {
     name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
@@ -11,7 +13,14 @@ var width  = svg.style('width').replace('px','');
 var height = svg.style('height').replace('px','');
 
 //Set up the colour scale
-var color = d3.scale.category20();
+var color = function(d) {
+    if (typeof highlightNodeName != 'undefined' && highlightNodeName.length > 0) {
+        if (d.name.substring(0,highlightNodeName.length) === highlightNodeName) {
+            return(d3.rgb("orange"));
+        }
+        return(d3.scale.category20());
+    }
+};
 
 //The scales for implementing zoom, every coordinate used for
 //drawing will have to go through these.
@@ -193,6 +202,12 @@ d3.json(topofile, function(error, topoData){
         //many connections between the same two nodes in a visually pleasing way
         link.rank = link.source.connections[link.target.guid];
     }
+
+    d3.select("#nodeX").on("input", function() {
+        highlightNodeName = this.value;
+        recolorNodes();
+    });
+
     updateGraph({nodes:topoData.nodes,links:topoData.links});
 });
 
@@ -229,6 +244,11 @@ function selectNodes(curnode){
                     d.target.guid == curnode.guid;
         }
     });
+}
+
+// Force color refresh of all nodes
+function recolorNodes() {
+    circles = svg.selectAll("circle").style("fill", function (d) { return color(d); });
 }
 
 //This function displays all the nodes and links as unselected
